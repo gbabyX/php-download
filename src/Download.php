@@ -6,12 +6,39 @@ class Download
     public $fileExt;
     private $tmpPath = __DIR__.'/Uploads_cache/';
     private $exceptionMap = array(
-        1001 => '创建缓存目录失败',
-        1002 => '远程文件错误'
+        1001 => 'make dir error',
+        1002 => 'remote file error',
+        1003 => 'cache file error',
+        1004 => 'cache file not exists'
     );
 
+    /**
+     *  下载
+     * @param $tmp_file
+     * @throws Exception
+     */
     public function startDownload($tmp_file)
     {
+        set_time_limit(0);
+        touch($tmp_file);
+        // 做些日志处理
+        if ($fp = fopen($this->remoteFileUrl, "rb")) {
+            if (!$download_fp = fopen($tmp_file, "wb")) {
+                throw new Exception($this->exceptionMap[1003],1003);
+            }
+            while (!feof($fp)) {
+                if (!file_exists($tmp_file)) {
+                    // 如果临时文件被删除就取消下载
+                    fclose($download_fp);
+                    throw new Exception($this->exceptionMap[1004]);
+                }
+                fwrite($download_fp, fread($fp, 1024 * 8 ), 1024 * 8);
+            }
+            fclose($download_fp);
+            fclose($fp);
+        } else {
+            throw new Exception($this->exceptionMap[1002],1002);
+        }
 
     }
 
