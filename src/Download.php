@@ -9,18 +9,21 @@ class Download
         1001 => 'make dir error',
         1002 => 'remote file error',
         1003 => 'cache file error',
-        1004 => 'cache file not exists'
+        1004 => 'cache file not exists',
+        1005 => 'attribute tmpFile is empty'
     );
+    public $tmpFile;
 
     /**
      *  下载
-     * @param $tmp_file
      * @throws Exception
      */
-    public function startDownload($tmp_file)
+    public function startDownload()
     {
+        $tmp_file = $this->getTmpPath();
         set_time_limit(0);
         touch($tmp_file);
+
         // 做些日志处理
         if ($fp = fopen($this->remoteFileUrl, "rb")) {
             if (!$download_fp = fopen($tmp_file, "wb")) {
@@ -59,23 +62,18 @@ class Download
             $path_info = pathinfo($this->remoteFileUrl);
             $this->fileExt = $path_info['extension'];
         }
-        $tmp_name = $this->tmpPath.$this->setTmpFileName($this->fileExt);
+        $tmp_name = $this->setTmpFileName($this->fileExt);
         $headers = get_headers($this->remoteFileUrl,true);
         return ['tmp_file' => $tmp_name,'size' => $headers['Content-Length']];
     }
 
     /**
-     *  临时存储远程文件
-     * @param $remote_url
-     * @param $tmp_path
+     * 获取缓存文件大小
      */
-    private function storeRemoteFile($remote_url,$tmp_path)
+    public function getTmpFileSize()
     {
-        $fp_out = fopen($tmp_path,'w');
-        $ch = curl_init($remote_url);
-        curl_setopt($ch,CURLOPT_FILE,$fp_out);
-        curl_exec($ch);
-        curl_close($ch);
+        $tmp_file = $this->getTmpPath();
+        return ['size' => filesize($tmp_file)];
     }
 
     /**
@@ -86,5 +84,18 @@ class Download
     private function setTmpFileName($ext = 'zip')
     {
         return sprintf('%s-%d.%s',uniqid(),rand(10000,99999),$ext);
+    }
+
+    /**
+     *  获取 缓存路径
+     * @return string
+     * @throws Exception
+     */
+    private function getTmpPath()
+    {
+        if (empty($this->tmpFile)){
+            throw new Exception($this->exceptionMap[1005]);
+        }
+        return $this->tmpPath.$this->tmpFile;
     }
 }
