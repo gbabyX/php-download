@@ -98,4 +98,9 @@ class Download
         }
         return $this->tmpPath.$this->tmpFile;
     }
+
+    public function __get($name)
+    {
+        return $this->$name;
+    }
 }

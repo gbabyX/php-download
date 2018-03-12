@@ -32,8 +32,21 @@ class DownloadTest extends  TestCase
     public function testStartDownload(array $file_arr)
     {
         $this->assertNotEmpty($file_arr);
-        $this->downloadObj->startDownload($file_arr['tmp_file']);
-        $this->assertFileExists($file_arr['tmp_file']);
+        $this->downloadObj->tmpFile = $file_arr['tmp_file'];
+        $this->downloadObj->startDownload();
+        $this->assertFileExists($this->downloadObj->tmpPath.$file_arr['tmp_file']);
+    }
+
+    /**
+     * @depends testPrepareDownload
+     * @param array $file_arr
+     */
+    public function testGetTmpFileSize(array $file_arr)
+    {
+        $this->assertNotEmpty($file_arr);
+        $this->downloadObj->tmpFile = $file_arr['tmp_file'];
+        $result = $this->downloadObj->getTmpFileSize();
+        print_r($result);
     }
 
 }
